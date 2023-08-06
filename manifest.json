@@ -1,0 +1,30 @@
+{
+  "manifest_version": "1",
+  "version": "0.1",
+  "version_name": "0.1 beta",
+  "name": "Tek No Logique",
+  "short_name": "tnl.prod",
+  "image": "./assets/logo tnl White.png",
+  "icons": [{
+    "src": "./assets/Logo_white.svg",
+    "sizes": "196x196",
+    "type": "image/svg",
+    "purpose": "any maskable"
+  },
+  {
+    "src": "./assets/logo tnl White.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }
+],
+  "purpose": "any",
+  "description": "you can bust the party but you can't stop the vibe, free party for no drugs people",
+  "start_url": "/",
+  "type": "website",
+  "display": "standalone",
+  "homepage_url": "https://staging.tnl.productions",
+  "author": "Arianna Minucci",
+  "theme_color": "#231f1f",
+  "background_color": "#231f1f"
+}
