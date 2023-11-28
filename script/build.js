@@ -22,11 +22,18 @@ const {
 
 // EXECUTION
 const WORKSPACE = "workspace:*";
-const packsInMonoRepo = { server: WORKSPACE, nostr: WORKSPACE, ui: WORKSPACE };
+const packsInMonoRepo = {
+  server: WORKSPACE,
+  nostr: WORKSPACE,
+  ui: WORKSPACE,
+  zaionbase: WORKSPACE,
+};
 const packsInStandAlone = {
-  server: "git+https://github.com/zaion-network/server.git#0.0.6",
-  nostr: "git+https://github.com/zaion-network/nostr.git#v0.0.1",
-  ui: "git+https://github.com/zaion-network/ui.git#v0.0.1",
+  server: "git+https://github.com/zaion-network/server.git#0.0.8",
+  nostr: "git+https://github.com/zaion-network/nostr.git#0.0.2",
+  ui: "git+https://github.com/zaion-network/ui.git#0.0.4",
+  zaionbase:
+    "git+https://github.com/zaion-network/zaionbase.git#zaionbase_dev_v0.0.2",
 };
 
 const PACKSMAP = new Map()

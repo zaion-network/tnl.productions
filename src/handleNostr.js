@@ -106,6 +106,13 @@ export function queryRelay(relay, ids) {
   });
 }
 
+export async function publish({ sk, relay, event, finishEvent }) {
+  // this assigns the pubkey, calculates the event id and signs the event in a single step
+  const signedEvent = finishEvent(event, sk);
+  await relay.publish(signedEvent);
+  return true;
+}
+
 export async function publishAndMonitor(
   sk,
   pk,
@@ -149,24 +156,3 @@ export async function sendDM(to, message, sk, pk, cb) {
   }, 2000);
   return true;
 }
-// export async function encrypChannelMessage(to, channelMessage, sk, pk, cb) {
-//   return tools.nip28.encrypt(to, channelMessage);
-// }
-// export async function sendCM(to, sk, channelMessage) {
-//   const relay = await connectToRelay("wss://relay.damus.io");
-//   const content = await encryptChannelMessage(to, channelMessage);
-//   const event = createEvent({
-//     content,
-//     created_at: Math.floor(Date.now() / 1000),
-//     kind: 42,
-//     pubkey: pk,
-//     tags: [["e", eventIdChannel, relay]],
-//   });
-//   await publishAndMonitor(sk, pk, relay, [42], event, tools.finishEvent, e => {
-//     cb(e);
-//   });
-//   setTimeout(() => {
-//     relay.close;
-//   }, 2000);
-//   return true;
-// }

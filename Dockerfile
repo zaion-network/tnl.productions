@@ -18,8 +18,13 @@ RUN bun install
 # build internal packs
 RUN bun script/packs_build.js
 
+# visto che il pacchetto server importa da zaionbase, al primo install non installa
+# per qualche motivo lo installa la seconda volta
+RUN bun install
+RUN bun script/packs_build.js
+
 # build app
-RUN bun run build
+RUN bun build.js
 
 # Avvia server quando il contenitore viene eseguito
 CMD ["bun", "--hot", "server.js"]
