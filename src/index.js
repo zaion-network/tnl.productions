@@ -1,4 +1,10 @@
 import * as secp from "https://unpkg.com/@noble/secp256k1"; // Unpkg
+import { links } from "../database/links";
+import { paragraphs } from "../database/pis";
+import { listOfFeatures } from "../database/listOfFeatures";
+import { logoPayoffs } from "../database/logoPayoffs";
+
+let parser = new DOMParser();
 
 class App extends EventTarget {
   constructor() {
@@ -6,6 +12,7 @@ class App extends EventTarget {
     document.documentElement.clientHeight;
   }
 }
+console.log("testing og:<url>");
 
 class UserInput extends EventTarget {
   constructor(userInput) {
@@ -141,32 +148,88 @@ const createAudio = document => {
 /**
  *
  * @param {document} document
+ * @param {string} path
  */
-const createPlayIcon = (document, player) => {
-  const play = document.createElement("i");
-  play.id = "play-btn";
-  play.className = "fa-solid fa-circle-play fa-lg";
-  const playclass = "fa-solid fa-circle-play fa-lg";
-  const pauseclass = "fa-solid fa-circle-pause fa-lg";
-
-  const map = new Map().set(true, pauseclass).set(false, playclass);
-  const mapstate = new Map()
-    .set(false, () => player.play())
-    .set(true, () => player.pause());
-  // player.setAttribute("controls", "true");
-  play.setAttribute(
-    "class",
-    `${map.get(false)} cur_p ps_end p_f w_fc r_1rem t_calc1`
-  );
-  play.addEventListener("click", e => {
-    const condition = e.target.className.includes(pauseclass);
-    e.target.setAttribute(
-      "class",
-      `${map.get(!condition)} cur_p ps_end p_f w_fc r_1rem t_calc1`
-    );
-    mapstate.get(condition)();
+const createSvg = async (document, path, id, pathcolor) => {
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const data = await (await fetch(path)).text();
+  let svgDoc = parser.parseFromString(data, "image/svg+xml");
+  let elements = svgDoc.querySelectorAll("circle, rect, path");
+  // Aggiungi ogni elemento al tuo elemento SVG
+  elements.forEach(element => {
+    if (element.tagName === "path") {
+      element.setAttribute("fill", pathcolor);
+    }
+    svg.appendChild(element);
   });
-  return play;
+  svg.id = id;
+  svg.classList.add("w24px");
+  svg.classList.add("h24px");
+  return svg;
+};
+
+/**
+ *
+ * @param {document} document
+ */
+const createPlayIcon = async (document, player) => {
+  // let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  // const data = await (await fetch("./assets/play-btn-black.svg")).text();
+  // let svgDoc = parser.parseFromString(data, "image/svg+xml");
+  // let elements = svgDoc.querySelectorAll("circle, rect, path");
+  // // Aggiungi ogni elemento al tuo elemento SVG
+  // elements.forEach(element => {
+  //   if (element.tagName === "path") {
+  //     element.setAttribute("fill", "white");
+  //   }
+  //   svg.appendChild(element);
+  // });
+  const playbtnsvg = await createSvg(
+    document,
+    "./assets/play-btn-black.svg",
+    "play-btn",
+    "white"
+  );
+  const pausebtnsvg = await createSvg(
+    document,
+    "./assets/pause-btn-black.svg",
+    "pause-btn",
+    "white"
+  );
+  const button = document.createElement("div");
+  button.appendChild(playbtnsvg);
+  button.className = "cur_p ps_end p_f w_fc r_1rem t_calc1 w24px h24px";
+  button.addEventListener("click", e => {
+    const parent = e.target.parentNode;
+    console.log(parent.firstChild.id);
+    if (parent.firstChild.id === "play-btn") {
+      parent.removeChild(parent.firstChild);
+      parent.appendChild(pausebtnsvg);
+      player.play();
+    } else {
+      parent.removeChild(parent.firstChild);
+      parent.appendChild(playbtnsvg);
+      player.pause();
+    }
+  });
+  // const play = document.createElement("img");
+  // play.id = "play-btn";
+  // play.src = "assets/play-btn-black.svg";
+  // const playclass = "none";
+  // const pauseclass = "fa-solid fa-circle-pause fa-lg";
+
+  // const map = new Map().set(true, pauseclass).set(false, playclass);
+  // const mapstate = new Map()
+  //   .set(false, () => player.play())
+  //   .set(true, () => player.pause());
+  // // player.setAttribute("controls", "true");
+  // play.setAttribute("class", `${map.get(false)} `);
+  // play.addEventListener("click", e => {
+  //   const condition = e.target.className.includes(pauseclass);
+  //   e.target.setAttribute("class", `${map.get(!condition)} `);
+  //   mapstate.get(condition)();
+  // });
+  return button;
 };
 
 /**
@@ -249,20 +312,25 @@ const createCallToAction = document => {
       `;
       window.confirm(message);
     };
+    const answer = askToSubscribe();
     try {
-      new UserInput(promptWip())
+      new UserInput(answer)
         .sanitizeEmail(answer => {
+          console.log(validator.isEmail(answer));
           if (answer === null) {
             throw Error("rejected");
+          } else if (!validator.isEmail(answer)) {
+            window.alert("You Must input a valid email");
           } else return answer;
         })
         .encryptEmail(sanitizedInput => {
           return sanitizedInput;
         })
         .send(ecryptedInput => {
+          fetch(`/subscribe?m=${ecryptedInput}`);
           try {
             window.confirm(
-              `thank you for subscribing with this address: ${answer}`
+              `thank you for subscribing with this address: ${ecryptedInput}`
             );
             return true;
           } catch (error) {
@@ -307,6 +375,7 @@ const createLogoPis = list => {
   });
   return pis;
 };
+
 const createFooter = () => {
   const footer = document.createElement("footer");
   footer.id = "footer";
@@ -324,12 +393,25 @@ function imgFadeIn(logo, className) {
     logo.className = className;
   }
 }
+
+/**
+ *
+ * @param {HTMLElement} element
+ * @param {HTMLElement[]} nodes
+ */
+const appendChildren = (element, nodes) => {
+  nodes.forEach(e => {
+    element.appendChild(e);
+  });
+};
+
 const body = document.getElementById("body");
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   const audio = createAudio(document);
   body.appendChild(audio);
-  const playicon = createPlayIcon(document, audio);
+  const playicon = await createPlayIcon(document, audio);
+  console.log(playicon);
   body.appendChild(playicon);
   const maincontainer = createMainContainer(document);
   const teknologique = createTNL(document);
@@ -342,83 +424,16 @@ window.addEventListener("DOMContentLoaded", () => {
   const newlogo = createLogo(document);
   body.appendChild(newlogo);
   newlogo.addEventListener("load", () => {
-    const logoPis = createLogoPis([
-      "you can bust the party but you can't stop the vibe",
-      "free party for no drugs people",
-    ]);
+    const logoPis = createLogoPis(logoPayoffs);
     logoPis.forEach(e => {
       body.appendChild(e);
     });
-    const ul = createUl([
-      "music",
-      "vinyl",
-      "merchandise",
-      "collectibles",
-      "tracks download",
-      "mixes download",
-      "loops",
-      "project files",
-      "plug-ins",
-      "streaming",
-      "booking",
-      "chat",
-      "social",
-    ]);
+    const ul = createUl(listOfFeatures);
     body.appendChild(ul);
-    const pis = createPis([
-      "all of which will be built on decentralized technologies cause we believe in true freedom.",
-      "if you are a producer and you are interested in making your music be heard, join us!! links below ⬇️",
-      "if you are a dj and you are interested in finding good music, tracks, loops and make your mixes be heard, join us!! links below ⬇️",
-      "if you are a label and you are interested in rejoining our network and learn out to use our open source tools, join us!! links below ⬇️",
-      "if you are a developer and you are interested in helping us building open source tools, join us!! links below ⬇️",
-    ]);
+    const pis = createPis(paragraphs);
     pis.forEach(p => body.appendChild(p));
     const footer = createFooter();
     body.appendChild(footer);
-    const links = [
-      {
-        href: "https://example.com",
-        id: "about",
-        target: "_blank",
-        text: "about",
-      },
-      {
-        href: "https://t.me/+gm8R7BbWmIRjMGM8",
-        id: "tg-group",
-        target: "_blank",
-        text: "TNL Dao Channel",
-      },
-      {
-        href: "https://t.me/+4HwnT5UaX9w4Yjc0",
-        id: "tg-prod-group",
-        target: "_blank",
-        text: "TNL Producers Group",
-      },
-      {
-        href: "https://audius.co/teknologique",
-        id: "audius",
-        target: "_blank",
-        text: "audius",
-      },
-      {
-        href: "https://gnosisscan.io/address/0xaf9b539cf6689c2d39e29e4dfe4debcf3ab43176",
-        id: "dao-gnosis",
-        target: "_blank",
-        text: "dao on gnosis",
-      },
-      {
-        href: "https://teknologique.bandcamp.com/",
-        id: "bandcamp",
-        target: "_blank",
-        text: "bandcamp",
-      },
-      {
-        href: "https://discord.gg/gNFQ3Us",
-        id: "discord",
-        target: "_blank",
-        text: "discord",
-      },
-    ];
 
     links
       .map(data => {
@@ -439,115 +454,6 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
-
-  function hexStringToUint8Array(hexString) {
-    const length = hexString.length / 2;
-    const uint8Array = new Uint8Array(length);
-
-    for (let i = 0; i < length; i++) {
-      const byteValue = parseInt(hexString.substr(i * 2, 2), 16);
-      uint8Array[i] = byteValue;
-    }
-
-    return uint8Array;
-  }
-
-  const bufferToHex = buffer => {
-    return Array.from(buffer)
-      .map(byte => byte.toString(16).padStart(2, "0"))
-      .join("");
-  };
-
-  const makePrivateAndPublicKeys = secp => {
-    const sk = secp.utils.randomPrivateKey();
-    const pk = secp.getPublicKey(sk);
-    if (!secp.utils.isValidPrivateKey(sk))
-      throw new Error(
-        "There was a problem while generating the key which was not valid"
-      );
-    return { sk, pk };
-  };
-
-  const createIV = () => {
-    return crypto.getRandomValues(new Uint8Array(16));
-  };
-
-  const convertSecret = async secret => {
-    return await window.crypto.subtle.importKey(
-      "raw",
-      secret,
-      "AES-CBC",
-      false,
-      ["encrypt", "decrypt"]
-    );
-  };
-
-  const encryptData = async (text, convertedSecret, iv) => {
-    return await window.crypto.subtle.encrypt(
-      {
-        name: "AES-CBC",
-        iv: iv,
-      },
-      convertedSecret,
-      new TextEncoder().encode(text)
-    );
-  };
-
-  const makesomething = secp => {
-    const { pk: pk1, sk: sk1 } = makePrivateAndPublicKeys(secp);
-    const { pk: pk2, sk: sk2 } = makePrivateAndPublicKeys(secp);
-    console.log(bufferToHex(sk1));
-    console.log(bufferToHex(pk1));
-    const isValid = secp.utils.isValidPrivateKey(sk1);
-    console.log(isValid);
-  };
-
-  const nostrTools = tools => {
-    const {
-      validateEvent,
-      verifySignature,
-      getSignature,
-      getEventHash,
-      getPublicKey,
-      relayInit,
-      generatePrivateKey,
-    } = tools;
-
-    const signEvent = (
-      { kind, created_at, tags, content, pubkey },
-      getEventHash,
-      getSignature,
-      validateEvent,
-      verifySignature
-    ) => {
-      let event = {
-        kind,
-        created_at,
-        tags,
-        content,
-        pubkey,
-      };
-
-      event.id = getEventHash(event);
-      event.sig = getSignature(event, privateKey);
-
-      let ok = validateEvent(event);
-      let veryOk = verifySignature(event);
-      if (!ok || !veryOk) throw new Error("not good in signEvent");
-      return event;
-    };
-  };
-  // makesomething(secp);
-  const TNLPUB =
-    "49fd86bcb4f59963a2eea88449b46716cc606b53be62b13cd450a7ee9cbd92fc";
-  // const SEC = process.env.SEC;
-  // const PUB = process.env.PUB;
-  // console.log(SEC);
-  // console.log(PUB);
-  // const isValid = secp.utils.isValidPrivateKey(SEC);
-  // const condition = window.NostrTools !== undefined;
-  // console.log(condition);
-  // if (condition) nostrTools(window.NostrTools);
 });
 
 // prova fine
