@@ -1,3 +1,23 @@
+# cartelle che sono in assets che dovranno essere integrate solo in staging o dove serve
+assets/DAO
+assets/gotek
+assets/gpt
+assets/inspirational-snippets
+assets/music
+assets/scripts
+assets/todo
+# files che sono connessi ai file md e file md
+assets/.gitignore
+assets/ancora cambio.md
+assets/equity crowdfunding.md
+assets/gotek.md
+assets/home.md
+assets/live coding and vault sharing.canvas
+assets/README.md
+assets/test wiki link.md
+assets/todo.md
+assets/todo.v2.md
+
 trash
 # Dependency directories
 node_modules/

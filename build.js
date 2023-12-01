@@ -5,3 +5,9 @@ await Bun.build({
   outdir: "dist",
   target: "browser",
 });
+
+await Bun.build({
+  entrypoints: ["./src/staging.js"],
+  outdir: "dist",
+  target: "browser",
+});

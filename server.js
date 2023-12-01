@@ -1,31 +1,39 @@
 #!/usr/bin/env bun
-
+import * as z from "@zaionstate/zaionbase";
 import { SimpleServer } from "@zaionstate/server";
-import { sendDM } from "./src/handleNostr";
+import { handleGetMetas } from "./src/handleGetMetas";
+import { handleSubscribe } from "./src/handleSubscribe";
+import { handleStaging } from "./src/handleStaging";
+import { handleDistStaging } from "./src/handleDistStaging";
+import { handleAuthDomain } from "./src/server/handleAuthDomain";
 
-new SimpleServer(80, async req => {
-  console.log(req.url);
+const conditioner = new z.Conditioner();
+
+const NODE_ENV = process.env.NODE_ENV;
+console.log(NODE_ENV);
+const port = {
+  development: 8081,
+  production: 80,
+};
+
+const staging = {
+  development: url =>
+    url.pathname === "/staging" || url.pathname === "/staging/auth",
+  production: url => url.host.includes("staging"),
+};
+
+new SimpleServer(port[NODE_ENV], async req => {
+  console.log("//////////////////////////// NEW REQUEST");
+  const DISTSTAGING = "/dist/staging.js";
+  const AUTH = "/auth";
   const url = new URL(req.url);
-  try {
-    if (url.pathname === "/subscribe") {
-      const TNLPUB =
-        "49fd86bcb4f59963a2eea88449b46716cc606b53be62b13cd450a7ee9cbd92fc";
-      const giac =
-        "005be03966ded6393a773e61469698b48a90944f6ce2b055b1d099e2c5fb1756";
-      const sk = process.env.SEC;
-      const pk = process.env.PUB;
-      const res = await sendDM(
-        giac,
-        url.searchParams.get("m"),
-        sk,
-        pk,
-        e => {}
-      );
-      console.log(res);
-      return url.searchParams.get("m");
-    }
-  } catch (error) {
-    console.log(error);
-    throw new Error("there was and error hanling the subscribe request");
-  }
+  if (url.pathname === AUTH) handleAuthDomain(url, NODE_ENV);
+  const arr = [
+    [url.pathname === "/subscribe", handleSubscribe, [url]],
+    [staging[NODE_ENV](url), handleStaging, [req]],
+    [url.pathname === DISTSTAGING, handleDistStaging, []],
+    [url.pathname.includes("/api/getmetas"), handleGetMetas, [url]],
+  ];
+  console.log(url.host);
+  return conditioner.elseIf("", arr, [() => null, []]);
 });

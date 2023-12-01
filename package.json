@@ -7,7 +7,9 @@
   "type": "module",
   "scripts": {
     "dev": "bun build ./src/index.js --outdir ./dist --target browser --watch",
+    "dev_staging": "bun build ./src/staging.js --outdir ./dist --target browser --watch",
     "build": "bun build ./src/index.js --outdir ./dist --target browser",
+    "server:dev": "bun --hot server.js",
     "docker:run": "docker run -d -p 8080:80 --name tnl.productions_wip tnl.productions_wip",
     "docker:runit": "docker run -it -p 8080:80 --name tnl.productions_wip tnl.productions_wip",
     "docker:build": "docker build -t 'tnl.productions_wip' ."
@@ -15,7 +17,9 @@
   "dependencies": {
     "@noble/secp256k1": "^2.0.0",
     "@zaionstate/server": "workspace:*",
-    "nostr-tools": "^1.16.0"
+    "@zaionstate/ui": "workspace:*",
+    "@zaionstate/zaionbase": "workspace:*",
+    "nostr-tools": "^1.17.0"
   },
   "devDependencies": {
     "typescript": "5.2.2"
