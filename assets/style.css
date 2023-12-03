@@ -372,6 +372,9 @@ body {
 .zi_1 {
   z-index: 1;
 }
+.jus_c_s_e {
+  justify-content: space-evenly;
+}
 .jus_c_c {
   justify-content: center;
 }
